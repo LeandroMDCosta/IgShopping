@@ -24,7 +24,6 @@ class IGStoresExtractor:
         if self.headless:
             options.add_argument("--headless")
         
-        # User-agent para evitar bloqueios e garantir comportamento de browser real
         options.set_preference("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0")
         
         self.driver = webdriver.Firefox(options=options)
@@ -42,25 +41,27 @@ class IGStoresExtractor:
         
         try:
             self.driver.get(url)
+            xpath = '//div[@class="grid grid-cols-2 w-full lg:grid-cols-3 place-content-center space-x-2"]/*'
+            css_botao = "button.bg-primary.text-white.rounded-full"
             
-            # --- LOOP PARA CLICAR EM "CARREGAR MAIS" ---
             while True:
                 try:
-                    css_botao = "button.bg-primary.text-white.rounded-full"
+                    itens_antes_do_clique = len(self.driver.find_elements(By.XPATH, xpath))
                     botao = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, css_botao)))
-                    
-                    # Rola até o botão e clica via JavaScript para evitar erros de sobreposição
                     self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", botao)
-                    time.sleep(1) 
+                    time.sleep(1)
                     self.driver.execute_script("arguments[0].click();", botao)
                     
-                    logging.info(f"Botão 'Ver mais' clicado em {nome_shopping}...")
-                    time.sleep(2) # Espera as novas lojas carregarem no DOM
+                    logging.info(f"Botão 'carregar mais' clicado em {nome_shopping}...")
+                    self.wait.until(
+                    lambda driver: len(driver.find_elements(By.XPATH, xpath)) > itens_antes_do_clique
+                    )
                     
                 except (TimeoutException, ElementClickInterceptedException):
-                    # Se o botão não for encontrado ou não for mais clicável, saímos do loop
+                
                     logging.info(f"Todas as lojas carregadas para {nome_shopping}.")
                     break
+            
 
             xpath_nome_loja = "//*[contains(@class, 'text-[#636363]') and contains(@class, 'font-bold')]"
             elementos = self.driver.find_elements(By.XPATH, xpath_nome_loja)
