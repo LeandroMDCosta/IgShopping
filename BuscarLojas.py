@@ -1,8 +1,10 @@
 import logging
 import os
+from urllib import response
 import pandas as pd
 import time
 from typing import List, Dict
+import scrapy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,7 +15,72 @@ from BuscarUrl import IGShoppingScraper
 # Configuração de logs
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+    
+
 class IGStoresExtractor:
+
+    name = 'igshopping' 
+    
+    df = {'shopping_administrator': [],
+          'shopping_name': [],
+          'shopping_site': [],
+          'shopping_data_url': [],
+          'store_name': [],
+          'store_floor': [],
+          'store_site': [],
+          'store_phone': [],
+          'store_type': [],
+          'source_page': []}
+    
+    def start_requests(self):
+        shopping_list = []
+        shopping_administrator = 'IGSHOPPING'
+
+
+        shopping_list.append(
+                {'shopping_administrator': shopping_administrator,
+                'shopping_name': 'Shopping Ariquemes',
+                'shopping_site': 'https://www.igshopping.com.br/ariquemes',
+                'shopping_data_url': 'https://www.igshopping.com.br/ariquemes/lojas'
+                }
+        )
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Ji Paraná',
+             'shopping_site': 'https://www.igshopping.com.br/ji-parana',
+             'shopping_data_url': 'https://www.igshopping.com.br/ji-parana/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Porto Velho',
+             'shopping_site': 'https://www.igshopping.com.br/porto-velho',
+             'shopping_data_url': 'https://www.igshopping.com.br/porto-velho/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Rolim de Moura',
+             'shopping_site': 'https://www.igshopping.com.br/rolim-de-moura',
+             'shopping_data_url': 'https://www.igshopping.com.br/rolim-de-moura/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Jaru',
+             'shopping_site': 'https://www.igshopping.com.br/jaru',
+             'shopping_data_url': 'https://www.igshopping.com.br/jaru/lojas'
+             }
+        )
+        
+        for shopping in shopping_list:
+            yield scrapy.Request(url=shopping['shopping_data_url'], meta=shopping)
+        
+
+
     def __init__(self, headless: bool = True):
         self.headless = headless
         self.driver = None
@@ -36,7 +103,6 @@ class IGStoresExtractor:
             self.driver.quit()
 
     def carregar_e_extrair(self, url: str, nome_shopping: str) -> List[Dict]:
-        lojas_da_unidade = []
         logging.info(f"Processando: {nome_shopping}")
         
         try:
@@ -74,58 +140,35 @@ class IGStoresExtractor:
            
             
             for el in elementos:
-                nome_loja = el.text.strip()
-                if nome_loja:
-                    lojas_da_unidade.append({
-                        "shopping": nome_shopping,
-                        "loja": nome_loja
-                    })
+                self.df['shopping_administrator'].append('IGSHOPPING')
+                self.df['shopping_name'].append(nome_shopping)
+                self.df['shopping_site'].append(url.replace('/lojas', ''))
+                self.df['shopping_data_url'].append(url)
+                self.df['store_name'].append(el.text.strip())
+                self.df['store_floor'].append(None)
+                self.df['store_site'].append(None)
+                self.df['store_phone'].append(None)
+                self.df['store_type'].append(None)
+                self.df['source_page'].append('lojas')
                     
         except Exception as e:
             logging.error(f"Erro ao processar unidade {nome_shopping}: {e}")
             
-        return lojas_da_unidade
 
 def main():
-    input_csv = "IgShoppings.csv" # Arquivo gerado na Parte 1
-    output_csv = "lojas_finais_ig.csv"
-    logging.info("--- PASSO 1: Atualizando a lista de shoppings ---")
-    with IGShoppingScraper(headless=True) as scraper_links:
-        novos_links = scraper_links.get_shoppings_links()
-
-        if novos_links:
-            df_novos = pd.DataFrame(novos_links)
-            df_novos.to_csv(input_csv, index=False, encoding='utf-8-sig')
-            logging.info("Lista de shoppings atualizada com sucesso no CSV!")
-        else:
-            logging.error("Aviso: Falha ao buscar novos links. Tentando usar o CSV antigo.")
-
-    logging.info("\n--- PASSO 2: Iniciando a extração das lojas ---")
-
-    if not os.path.exists(input_csv):
-        logging.error(f"Arquivo {input_csv} não encontrado!")
-        return
-
-    df_shoppings = pd.read_csv(input_csv)
-    
+    logging.info("--- PASSO 1: Atualizando a lista de shoppings ---")   
     dados_totais = []
 
     with IGStoresExtractor(headless=True) as scraper:
-        for _, row in df_shoppings.iterrows():
-            url_base = str(row['url']).strip()
-            if url_base.endswith('/'):
-               url_base = url_base[:-1]
-            url_lojas = f"{url_base}/lojas"
-            resultado = scraper.carregar_e_extrair(url_lojas, row['nome'])
+            url_lojas = response.meta['shopping_data_url']
+            resultado = scraper.carregar_e_extrair(url_lojas,response.meta['shopping_name'])
             dados_totais.extend(resultado)
 
     if dados_totais:
         df_final = pd.DataFrame(dados_totais)
         df_final = df_final.drop_duplicates()
-        df_final.to_csv(output_csv, index=False, encoding='utf-8-sig')
-        logging.info(f"Sucesso! {len(df_final)} lojas extraídas e salvas em {output_csv}")
+        df_final.to_csv("Dados_IgShoppings_Lojas.csv", index=False, encoding='utf-8-sig')
+        logging.info(f"Dados de lojas salvos com sucesso em: {os.path.abspath('Dados_IgShoppings_Lojas.csv')}")
     else:
         logging.warning("Nenhum dado foi extraído.")
 
-if __name__ == "__main__":
-    main()

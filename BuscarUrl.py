@@ -2,6 +2,7 @@ import logging
 import os
 import pandas as pd
 from typing import List, Dict
+import scrapy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,7 +16,64 @@ logging.basicConfig(
 )
 
 class IGShoppingScraper:
+    name = 'igshopping' 
+    df = {'shopping_administrator': [],
+          'shopping_name': [],
+          'shopping_site': [],
+          'shopping_data_url': [],
+          'store_name': [],
+          'store_floor': [],
+          'store_site': [],
+          'store_phone': [],
+          'store_type': [],
+          'source_page': []}
     
+    def start_requests(self):
+        shopping_list = []
+        shopping_administrator = 'IGSHOPPING'
+
+
+        shopping_list.append(
+                {'shopping_administrator': shopping_administrator,
+                'shopping_name': 'Shopping Ariquemes',
+                'shopping_site': 'https://www.igshopping.com.br/ariquemes',
+                'shopping_data_url': 'https://www.igshopping.com.br/ariquemes/lojas'
+                }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Ji Paraná',
+             'shopping_site': 'https://www.igshopping.com.br/ji-parana',
+             'shopping_data_url': 'https://www.igshopping.com.br/ji-parana/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Porto Velho',
+             'shopping_site': 'https://www.igshopping.com.br/porto-velho',
+             'shopping_data_url': 'https://www.igshopping.com.br/porto-velho/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Rolim de Moura',
+             'shopping_site': 'https://www.igshopping.com.br/rolim-de-moura',
+             'shopping_data_url': 'https://www.igshopping.com.br/rolim-de-moura/lojas'
+             }
+        )
+
+        shopping_list.append(
+            {'shopping_administrator': shopping_administrator,
+             'shopping_name': 'Shopping Jaru',
+             'shopping_site': 'https://www.igshopping.com.br/jaru',
+             'shopping_data_url': 'https://www.igshopping.com.br/jaru/lojas'
+             }
+        )
+            
+        
     def __init__(self, headless: bool = True):
         self.url = "https://www.igshopping.com.br/"
         self.headless = headless
