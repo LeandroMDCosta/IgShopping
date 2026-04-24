@@ -51,7 +51,6 @@ class IGShoppingScraper:
         for loja in lojas:
             try:
                 url = loja.get_attribute("href")
-                # Tenta pegar o texto, se vazio, limpa a URL para gerar um nome
                 nome = loja.text.strip() or url.split('/')[-1].replace('-', ' ').title()
                 
                 if url and "igshopping" in url:
@@ -59,7 +58,6 @@ class IGShoppingScraper:
             except Exception as e:
                 logging.warning(f"Erro ao ler link: {e}")
         
-        # Remove duplicados (como o link da logo ou links repetidos)
         return list({v['url']: v for v in links_data}.values())
     
     

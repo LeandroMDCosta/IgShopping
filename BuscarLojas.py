@@ -49,7 +49,13 @@ class IGStoresExtractor:
                     itens_antes_do_clique = len(self.driver.find_elements(By.XPATH, xpath))
                     botao = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, css_botao)))
                     self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", botao)
-                    time.sleep(1)
+                    posicao_anterior = None
+                    while True:
+                        posicao_atual = botao.location['y']
+                        if posicao_atual == posicao_anterior:
+                          break # O botão parou de se mover, o scroll terminou!
+                        posicao_anterior = posicao_atual
+                        time.sleep(0.05) # Pausa de apenas 50ms para a próxima checagem
                     self.driver.execute_script("arguments[0].click();", botao)
                     
                     logging.info(f"Botão 'carregar mais' clicado em {nome_shopping}...")
@@ -88,7 +94,6 @@ def main():
         novos_links = scraper_links.get_shoppings_links()
 
         if novos_links:
-            # Salva por cima do CSV antigo, garantindo dados novos
             df_novos = pd.DataFrame(novos_links)
             df_novos.to_csv(input_csv, index=False, encoding='utf-8-sig')
             logging.info("Lista de shoppings atualizada com sucesso no CSV!")
@@ -102,8 +107,6 @@ def main():
         return
 
     df_shoppings = pd.read_csv(input_csv)
-    # Garante que as colunas existem (ajuste se os nomes no seu CSV forem diferentes)
-    # Se o seu CSV usa 'nome' e 'url', o código abaixo funciona perfeitamente.
     
     dados_totais = []
 
@@ -118,7 +121,6 @@ def main():
 
     if dados_totais:
         df_final = pd.DataFrame(dados_totais)
-        # Remove duplicatas que podem surgir no carregamento dinâmico
         df_final = df_final.drop_duplicates()
         df_final.to_csv(output_csv, index=False, encoding='utf-8-sig')
         logging.info(f"Sucesso! {len(df_final)} lojas extraídas e salvas em {output_csv}")
