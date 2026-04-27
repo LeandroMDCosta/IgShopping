@@ -30,13 +30,13 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
         }
         
        
-        options = webdriver.FirefoxOptions()
+        options = webdriver.ChromeOptions()
         if self.headless:
-            options.add_argument("--headless")
+            options.add_argument("--headless=new")
         
-        options.set_preference("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0")
+        options.add_argument("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0")
         
-        self.driver = webdriver.Firefox(options=options)
+        self.driver = webdriver.Chrome(options=options)
         self.driver.set_window_size(1920, 1080)
         self.wait = WebDriverWait(self.driver, 10)
 
@@ -144,7 +144,7 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
     def closed(self, reason):
         if hasattr(self, 'driver') and self.driver:
             self.driver.quit()
-            logging.info("Navegador Firefox fechado com sucesso. Iniciando Pipeline...")
+            logging.info("Navegador fechado com sucesso. Iniciando Pipeline...")
 
             total_lojas = len(self.df['store_name'])
         logging.info(f"Rendimento total: {total_lojas} lojas raspadas em todos os shoppings. Iniciando envio para BigQuery...")
