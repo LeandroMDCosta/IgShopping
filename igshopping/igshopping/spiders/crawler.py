@@ -10,12 +10,12 @@ from selenium.common.exceptions import TimeoutException, ElementClickIntercepted
 class IgshoppingcrawlerSpider(scrapy.Spider):
     name = 'igshopping' 
     
-    # 1. Iniciamos a classe corretamente para o Scrapy aceitar
+
     def __init__(self, headless: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.headless = headless
         
-        # 2. Mantemos o self.df EXATAMENTE como a sua Pipeline espera encontrar
+       
         self.df = {
             'shopping_administrator': [],
             'shopping_name': [],
@@ -29,7 +29,7 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
             'source_page': []
         }
         
-        # 3. Configuramos e abrimos o Selenium apenas UMA vez aqui no início
+       
         options = webdriver.FirefoxOptions()
         if self.headless:
             options.add_argument("--headless")
@@ -94,7 +94,7 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
             xpath = '//div[@class="grid grid-cols-2 w-full lg:grid-cols-3 place-content-center space-x-2"]/*'
             css_botao = "button.bg-primary.text-white.rounded-full"
             
-            # Lógica de rolagem e clique do Selenium
+           
             while True:
                 try:
                     itens_antes_do_clique = len(self.driver.find_elements(By.XPATH, xpath))
@@ -125,7 +125,7 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
             elementos = self.driver.find_elements(By.XPATH, xpath_nome_loja)
 
             for el in elementos:
-                # 4. Inserimos no self.df para que a Pipeline possa ler depois
+               
                 self.df['shopping_administrator'].append(admin)
                 self.df['shopping_name'].append(nome_shopping)
                 self.df['shopping_site'].append(site)
@@ -140,7 +140,7 @@ class IgshoppingcrawlerSpider(scrapy.Spider):
         except Exception as e:
             logging.error(f"Erro ao processar unidade {nome_shopping}: {e}")
 
-    # 5. Fechamento seguro do navegador quando o Scrapy terminar de raspar tudo
+  
     def closed(self, reason):
         if hasattr(self, 'driver') and self.driver:
             self.driver.quit()
